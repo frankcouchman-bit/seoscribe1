@@ -1,0 +1,55 @@
+[build]
+  publish = "."
+
+# ---------- SPA: send all routes to index ----------
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# (Optional) Zero-config API proxy so you can use "/api/*" locally or later.
+# If you keep API_URL hardcoded in index.html, you can ignore this.
+[[redirects]]
+  from = "/api/*"
+  to = "https://seoscribe.frank-couchman.workers.dev/:splat"
+  status = 200
+  force = true
+
+# ---------- Security + Performance headers ----------
+# Global
+[[headers]]
+  for = "/*"
+  [headers.values]
+  # CSP: adjust ONLY the domains list if you change CDNs/APIs
+  Content-Security-Policy = """
+    default-src 'self';
+    script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://unpkg.com;
+    style-src  'self' 'unsafe-inline' https://fonts.googleapis.com;
+    img-src    'self' data: blob: https:;
+    font-src   'self' data: https://fonts.gstatic.com;
+    connect-src 'self' https://seoscribe.frank-couchman.workers.dev;
+    manifest-src 'self';
+    frame-ancestors 'self';
+    base-uri 'none';
+    upgrade-insecure-requests;
+  """
+  Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+  X-Content-Type-Options    = "nosniff"
+  X-Frame-Options           = "SAMEORIGIN"
+  Referrer-Policy           = "strict-origin-when-cross-origin"
+  Permissions-Policy        = "camera=(), microphone=(), geolocation=(), interest-cohort=()"
+  Cross-Origin-Resource-Policy = "same-origin"
+  # Helpful caching defaults for HTML/JS/CSS (sw handles runtime assets)
+  Cache-Control = "public, max-age=0, must-revalidate"
+
+# Fonts are immutable – cache hard
+[[headers]]
+  for = "/**/*.woff2"
+  [headers.values]
+  Cache-Control = "public, max-age=31536000, immutable"
+
+# Images & static media
+[[headers]]
+  for = "/**/*.(png|jpg|jpeg|gif|webp|svg|ico)"
+  [headers.values]
+  Cache-Control = "public, max-age=604800, immutable"
